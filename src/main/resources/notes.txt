@@ -1,0 +1,24 @@
+
+//        pipeline.apply("Creating dummy record ", );
+
+//        String query = "SELECT * FROM POC.test_table";
+//        // Read data from the JDBC source
+//        PCollection<Map<String,String>> jdbcData = pipeline.apply("Read from JDBC",
+//                JdbcIO.<Map<String,String>>read()
+//                        .withDataSourceConfiguration(JdbcIO.DataSourceConfiguration.create(dataSource))
+//                        .withQuery(query)
+//                        .withRowMapper(resultSet -> {
+//                            ResultSetMetaData metaData = resultSet.getMetaData();
+//                            Map<String,String> rowMap = new HashMap<>();
+//                            for (int i = 1; i < metaData.getColumnCount(); i++) {
+//                                String columnType = metaData.getColumnTypeName(i);
+//                                String colName = metaData.getColumnName(i).toUpperCase();
+//                                if(columnType.equals("bytes")){
+//                                    rowMap.put(colName,new String(resultSet.getBytes(i)));
+//                                } else {
+//                                    rowMap.put(colName,String.valueOf(resultSet.getObject(i)));
+//                                }
+//                            }
+//                            return rowMap;
+//                        }).withCoder(MapCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of()))
+//        );
