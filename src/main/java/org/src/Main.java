@@ -1,17 +1,22 @@
 package org.src;
 
+import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.jdbc.JdbcIO;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.src.PipeOptionCustom.MainPipelineOptions;
 import org.src.datasource.DataSourceProvider;
 
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.nio.channels.Pipe;
 import java.sql.*;
 
 public class Main {
@@ -69,30 +74,35 @@ public class Main {
             }));
     }
 
-    public static void main(String[] args) {
-        /*
-        table schema:
-        'id','varchar(10)','YES','',NULL,''
-        'name','varchar(45)','YES','',NULL,''
-        'location','varchar(45)','YES','',NULL,''
-         */
+    public static PCollection<TableRow> readFromBqTable(Pipeline pipeline, TableReference tableSpec) {
+        return pipeline.apply("Read from BigQuery query",
+                        BigQueryIO.readTableRows().from(String.format("%s:%s.%s",tableSpec.getProjectId(),tableSpec.getDatasetId(),tableSpec.getTableId()))
+                );
+    }
 
-        Pipeline pipeline = Pipeline.create();
-        String tableName = "POC.test_table";
-        DataSource dataSource = DataSourceProvider.getDataSource("com.mysql.cj.jdbc.Driver","jdbc:mysql://localhost:3306/POC","root","");
-        String insQuery = "INSERT INTO "+ tableName +" (id, name, location) VALUES (?, ?, ?)";
+
+    public static void main(String[] args) {
+        MainPipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MainPipelineOptions.class);
+        Pipeline pipeline = Pipeline.create(options);
+        TableReference tableSpec = new TableReference()
+                        .setProjectId("burner-sidsoni1")
+                        .setDatasetId("ApiToBqStg")
+                        .setTableId("Employee");
+//        String tableName = "POC.test_table";
+//        DataSource dataSource = DataSourceProvider.getDataSource("com.mysql.cj.jdbc.Driver","jdbc:mysql://localhost:3306/POC","root","");
+//        String insQuery = "INSERT INTO "+ tableName +" (id, name, location) VALUES (?, ?, ?)";
 
         //Truncate Before Load
-        TruncateTable(tableName,dataSource);
+//        TruncateTable(tableName,dataSource);
 
         //Mimic the BigQueryIO.read data type PCollection<TableRow>
-        PCollection<TableRow> input = getDummyBqTableRowData(pipeline);
+        PCollection<TableRow> input = readFromBqTable(pipeline,tableSpec);
 
         //Calling writer with input pcollectiond , insert query and data source object
-        TableRowToMSServer(input,insQuery,dataSource);
+//        TableRowToMSServer(input,insQuery,dataSource);
 
 
-        input.apply(ParDo.of(new LogOutput<>()));
+        input.apply("Displaying the data: ",ParDo.of(new LogOutput<>()));
         pipeline.run().waitUntilFinish();
 
     }

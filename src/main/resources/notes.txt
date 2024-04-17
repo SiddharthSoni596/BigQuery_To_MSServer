@@ -1,3 +1,13 @@
+ mvn compile exec:java \
+ -Pdataflow \
+ -Dexec.mainClass=org.src.Main \
+ -Dexec.cleanupDaemonThreads=false \
+ -Dexec.args=" \
+ --project=burner-sidsoni1 \
+ --region=us-central1 \
+ --stagingLocation=gs://gcp-dataflow-java/stage \
+ --tempLocation=gs://gcp-dataflow-java/temp \
+ --runner=DataflowRunner"
 
 //        pipeline.apply("Creating dummy record ", );
 
