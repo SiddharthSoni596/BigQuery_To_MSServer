@@ -7,6 +7,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.src.bqtomsservermapping.table1setter;
 import org.src.datasource.DataSourceProvider;
 
 
@@ -62,11 +63,7 @@ public class Main {
             JdbcIO.<TableRow>write()
             .withDataSourceConfiguration(JdbcIO.DataSourceConfiguration.create(dataSource))
             .withStatement(sqlQuery)
-            .withPreparedStatementSetter((element, statement) -> {
-                statement.setString(1, (String) element.getOrDefault("id",null));
-                statement.setString(2, (String) element.getOrDefault("name",null));
-                statement.setString(3, (String) element.getOrDefault("location",null));
-            }));
+            .withPreparedStatementSetter(new table1setter()));
     }
 
     public static void main(String[] args) {
@@ -87,6 +84,7 @@ public class Main {
 
         //Mimic the BigQueryIO.read data type PCollection<TableRow>
         PCollection<TableRow> input = getDummyBqTableRowData(pipeline);
+
 
         //Calling writer with input pcollectiond , insert query and data source object
         TableRowToMSServer(input,insQuery,dataSource);
